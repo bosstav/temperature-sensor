@@ -1,2 +1,7 @@
 ﻿  TempJSON.cpp
+C:\Users\bernt\source\repos\TempJSON\TempJSON\TempJSON.cpp(44,29): warning C4244: 'argument': conversion from 'double' to 'const _Ty', possible loss of data
+          with
+          [
+              _Ty=float
+          ]
   TempJSON.vcxproj -> C:\Users\bernt\source\repos\TempJSON\Debug\TempJSON.exe
