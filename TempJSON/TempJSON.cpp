@@ -3,6 +3,8 @@
 
 
 
+
+
 #include <iostream> 
 #include <fstream>
 #include <string> 
@@ -25,7 +27,19 @@ struct Temperature {
     double min;
     double max;
     double avg;
-}Latest;
+}latest;
+
+// TemperatureMeasurement
+/*{
+    "time": {
+        "start": string, // Start date and time in ISO8601 format for the measurement
+            "end" : string // End date and time in ISO8601 format for the measurement
+    },
+        "min" : number, // Minimum observed temperature
+            "max" : number, // Maximum observed temperature
+            "average" : number // Average temperature
+}
+*/
 
 double GetTemperature() {
     std::ifstream file("C:\\recruitment\\temperature-sensor\\temperature.txt");
@@ -34,7 +48,7 @@ double GetTemperature() {
         std::getline(file, str);
         rawTemp = std::stod(str);
         //std::cout << str << "\n";
-
+        //std::this_thread::sleep_for(std::chrono::milliseconds(200000));
     }
     tempFromText++;
     if (tempFromText == 768) {
@@ -45,10 +59,6 @@ double GetTemperature() {
     //4095 is max temp at 3.3v max temp is 50C min is -50C
 }
 
-double CompTemperature(double rawTemp) {
-    double realTemp = (rawTemp * tempStep) - compTemp;
-    return realTemp;
-}
 
 void TemperatureBuffer(double latestTemperatureReading) {
     allTempValues.push_back(latestTemperatureReading);
@@ -59,16 +69,15 @@ void TemperatureBuffer(double latestTemperatureReading) {
 
 
     if (allTempValuesCounter == 1199) {
-        //Latest.Max = *std::max_element(AllTempValues.begin(), AllTempValues.end());
         //std::cout << "Maximum value is" << "\n";
-        //std::cout << Latest.Max << "\n";
+        //std::cout << latest.Max << "\n";
         auto minmax = minmax_element(allTempValues.begin(), allTempValues.end());
-        Latest.min = *minmax.first;
-        Latest.max = *minmax.second;
-        Latest.avg = accumulate(allTempValues.begin(), allTempValues.end(), 0.0) / allTempValues.size();
-        std::cout << "min is " << Latest.min;
-        std::cout << "max is " << Latest.max;
-        std::cout << "average is " << Latest.avg;
+        latest.min = *minmax.first;
+        latest.max = *minmax.second;
+        latest.avg = accumulate(allTempValues.begin(), allTempValues.end(), 0.0) / allTempValues.size();
+        std::cout << "min is " << latest.min;
+        std::cout << "max is " << latest.max;
+        std::cout << "average is " << latest.avg;
         allTempValues.clear();
         std::this_thread::sleep_for(std::chrono::milliseconds(200000));
 
@@ -89,10 +98,9 @@ int main() {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));    //Wait 100ms between temperature readings
         double latestTemperatureReading = GetTemperature();
         TemperatureBuffer(latestTemperatureReading);
-        //std::cout << LatestTemperatureReading << "\n";
+        //std::cout << latestTemperatureReading << "\n";
 
     }
 }
-
 
 
