@@ -13,12 +13,13 @@
 #include <thread>   //For Sleep
 #include <iomanip>  //For UTC time
 #include <sstream>  //For UTC time
+#include <deque>
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 #include <cpprest/json.h>
 
 
-
+std::deque<int> orderOfReadings;
 
 
 
@@ -43,20 +44,18 @@ std::vector<double> avgTempValues(10);
 std::string now = "2017-04-28T15:07:37";
 std::string after = "2017-04-28T15:09:37";
 
-
-
-
-// TemperatureMeasurement
-/*{
-    "time": {
-        "start": string, // Start date and time in ISO8601 format for the measurement
-            "end" : string // End date and time in ISO8601 format for the measurement
-    },
-        "min" : number, // Minimum observed temperature
-            "max" : number, // Maximum observed temperature
-            "average" : number // Average temperature
+void OrderOfTempReadings(int a) {
+    orderOfReadings.push_front(a);
+    if (orderOfReadings.size() > 10) {
+        orderOfReadings.pop_back();
+    }
+    
+    
+    std::cout << orderOfReadings.at(0) << "orderOfReadings position 0";
+    std::cout << orderOfReadings.size() << "size of queue ";
+ 
+    
 }
-*/
 
 std::string iso8601() {
     struct tm tmNow;
@@ -134,16 +133,6 @@ void CreateAndSendSingleJSON() {
     TemperatureMeasurement[L"min"] = web::json::value::number(tempMin);
     TemperatureMeasurement[L"max"] = web::json::value::number(tempMax);
     TemperatureMeasurement[L"average"] = web::json::value::number(tempAvg);
-    */
-
-
-    /*
-    web::json::value TemperatureMeasurement;
-    TemperatureMeasurement[L"average"] = web::json::value::string(utility::conversions::to_utf16string("0.01"));
-    TemperatureMeasurement[L"max"] = web::json::value::string(utility::conversions::to_utf16string("10.53"));
-    TemperatureMeasurement[L"min"] = web::json::value::string(utility::conversions::to_utf16string("-10.54"));
-    TemperatureMeasurement[L"time"][L"end"] = web::json::value::string(utility::conversions::to_utf16string("2017-04-28T15:07:37Z"));
-    TemperatureMeasurement[L"time"][L"start"] = web::json::value::string(utility::conversions::to_utf16string("2017-04-28T15:07:37Z"));
     */
 
 
@@ -319,9 +308,10 @@ void TemperatureBuffer(double latestTemperatureReading) {
         //
         */
         allTempValues.clear();
-        std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
         //http send
+        OrderOfTempReadings(measurementInterval);
         measurementInterval++;
         if (measurementInterval == 9) {
             measurementInterval = 0;
