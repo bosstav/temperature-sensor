@@ -6,14 +6,14 @@
 #include <fstream>
 #include <string> 
 #include <vector> 
-#include <array>                    // std::array
+#include <array>                    
 #include <algorithm>                //For min_element, std::max_element
 #include <numeric>                  //For Accumulate
 #include <chrono>                   //For Sleep
 #include <thread>                   //For Sleep
 #include <iomanip>                  //For UTC time
 #include <sstream>                  //For UTC time
-#include <deque>                    //For 
+#include <deque>                    
 #include <cpprest/http_client.h>    //JSON
 #include <cpprest/filestream.h>     //JSON
 #include <cpprest/json.h>           //JSON
@@ -58,23 +58,28 @@ void OrderOfTempReadings(int a) {
 }
 
 std::string iso8601() {
-    struct tm tmNow;
+    struct tm tmNow;                //Create time struct
 
-    time_t now = time(NULL);    // Get the current time
-    _localtime64_s(&tmNow, &now);
+    time_t now = time(NULL);        // Get the current time
+    _localtime64_s(&tmNow, &now);   //Converts a time_t time value to a tm structure, and corrects for the local time zone
 
+    
+
+    
     char bufferTime[26];
-
     char bufferTimezoneOffset[6];
-    size_t tsizTime = strftime(bufferTime, 26, "%Y-%m-%dT%H:%M:%S", &tmNow);
-    size_t tsizOffset = strftime(bufferTimezoneOffset, 6, "%z", &tmNow);
+    size_t tsizTime = strftime(bufferTime, 26, "%Y-%m-%dT%H:%M:%S", &tmNow);   
+    size_t tsizOffset = strftime(bufferTimezoneOffset, 6, "%z", &tmNow);       
 
-    std::string time = bufferTime;
-    return time;
+    std::string timeStamp = std::string() + bufferTime + bufferTimezoneOffset;  //Adds time and timezoneoffset together
+    timeStamp.insert(22, ":");                                                  
+    //std::cout << timeStamp;
+    return timeStamp;
 }
 
 void CreateAndSend10LastJSON() {
     
+    //Create JSON array
     web::json::keep_object_element_order(true);
 
     std::vector<web::json::value> arraytemperature;
@@ -96,7 +101,7 @@ void CreateAndSend10LastJSON() {
     TemperatureMeasurement = web::json::value::array(arraytemperature);
     std::cout << "Sending ten JSON tempreadings" << "\n";
 
-    //web::http::client::http_client client(L"http://localhost:3000/posts");
+    //web::http::client::http_client client(L"http://localhost:3000/posts");                    //Test server
     web::http::client::http_client client(L"http://localhost:5000/api/temperature/missing");
 
 
@@ -135,7 +140,7 @@ void CreateAndSend10LastJSON() {
             });
 }
 
-std::string ConvertDoubleIntoString(double temp){
+std::string ConvertDoubleIntoString(double temp){ //COnvert doubles to string to only send json with two decimal places
     std::stringstream ss;
     ss << std::fixed << std::setprecision(2) << temp;
     std::string string = ss.str();
@@ -144,6 +149,7 @@ std::string ConvertDoubleIntoString(double temp){
 
 void CreateAndSendSingleJSON() {
  
+    //Creating JSON
     web::json::value TemperatureMeasurement;
     web::json::keep_object_element_order(true);
 
@@ -156,7 +162,7 @@ void CreateAndSendSingleJSON() {
 
     std::cout << "Sending single JSON tempreading" << "\n";
 
-    
+    //Creates JSON with numbers sent as string to keep two decimal places
     /*
     utility::string_t timeBeforestring = utility::conversions::to_string_t(timeBefore[measurementInterval]);
     utility::string_t timeAfterstring = utility::conversions::to_string_t(timeAfter[measurementInterval]);
@@ -181,7 +187,7 @@ void CreateAndSendSingleJSON() {
     
 
 
-    //web::http::client::http_client client(L"http://localhost:3000/posts");
+    //::http::client::http_client client(L"http://localhost:3000/posts");              //Test server
     web::http::client::http_client client(L"http://localhost:5000/api/temperature");
 
 
@@ -190,7 +196,7 @@ void CreateAndSendSingleJSON() {
 
     //std::wcout << TemperatureMeasurement << std::endl;
 
-    client.request(web::http::methods::POST, U("/"), TemperatureMeasurement).then([](const web::http::http_response& response)
+    client.request(web::http::methods::POST, U("/"), TemperatureMeasurement).then([](const web::http::http_response& response)  //Sends JSON
             {
                 std::wcout << response.status_code() << std::endl;
 
@@ -216,7 +222,7 @@ void CreateAndSendSingleJSON() {
     
 
         
-double GetTemperature() {
+double GetTemperature() {   //Gets one reading from temperature text file and returns it value processed into real temp
     std::ifstream file("C:\\recruitment\\temperature-sensor\\temperature.txt");
     std::string str;
     for (int i = 0; i < tempFromText; ++i) {
@@ -226,18 +232,18 @@ double GetTemperature() {
         //std::this_thread::sleep_for(std::chrono::milliseconds(200000));
     }
     tempFromText++;
-    if (tempFromText == 768) {
+    if (tempFromText == 768) {      //loops readings
         tempFromText = 0;
     }
-    double realTemp = (rawTemp * tempStep) - compTemp;
+    double realTemp = (rawTemp * tempStep) - compTemp;  //Adjust temp reading to real value
     return realTemp;
     
 }
 
 
-void TemperatureBuffer(double latestTemperatureReading) {
-    allTempValues.push_back(latestTemperatureReading);
-    if (allTempValuesCounter == 0) {
+void TemperatureBuffer(double latestTemperatureReading) {   //Keeps all readings to get values over two minute interval
+    allTempValues.push_back(latestTemperatureReading);      //Adds latest reading into a vector
+    if (allTempValuesCounter == 0) {                        //Stores start time for measurement interval
         
 
         timeBefore[measurementInterval] = iso8601();
@@ -249,13 +255,13 @@ void TemperatureBuffer(double latestTemperatureReading) {
 
 
 
-    if (allTempValuesCounter == 1199) {
+    if (allTempValuesCounter == 1199) {                     //Calculates min, max and average temp over two minute interval
         auto minmax = minmax_element(allTempValues.begin(), allTempValues.end());
         minTempValues[measurementInterval] = *minmax.first;
         maxTempValues[measurementInterval] = *minmax.second;
         avgTempValues[measurementInterval] = accumulate(allTempValues.begin(), allTempValues.end(), 0.0) / allTempValues.size();
-        timeAfter[measurementInterval] = iso8601();
-        if (sentToAlternative == false) {
+        timeAfter[measurementInterval] = iso8601();         //Stores end time for measurement interval
+        if (sentToAlternative == false) {                   //Decides where to send readings based on latest http response
             CreateAndSendSingleJSON();
         }
         else {
@@ -265,9 +271,9 @@ void TemperatureBuffer(double latestTemperatureReading) {
         
         allTempValues.clear();
 
-        OrderOfTempReadings(measurementInterval);
+        OrderOfTempReadings(measurementInterval);           //Stores order of reading for fallback JSON
         measurementInterval++;
-        if (measurementInterval == 10) {
+        if (measurementInterval == 10) {                    //Goes back to start of list of measurement interval log kept for fallback JSON
             sentToAlternative = true; //For testing purposes
             //std::this_thread::sleep_for(std::chrono::milliseconds(2000)); //For testing purposes
             measurementInterval = 0;
@@ -286,8 +292,8 @@ void TemperatureBuffer(double latestTemperatureReading) {
 int main() {
     while (1) {
         //std::this_thread::sleep_for(std::chrono::milliseconds(100));    //Wait 100ms between temperature readings
-        double latestTemperatureReading = GetTemperature();
-        TemperatureBuffer(latestTemperatureReading);
+        double latestTemperatureReading = GetTemperature();                 //Gets temperaturereading                 
+        TemperatureBuffer(latestTemperatureReading);                        //Sends temperaturereading to buffer
         //std::cout << latestTemperatureReading << "\n";
 
     }
